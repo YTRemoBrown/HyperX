@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HyperX v5.0 — محلل APK متقدم</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="bg-anim"></div>
+
+<header class="topbar">
+  <div class="logo">⚡ HyperX <span class="ver">v5.0</span></div>
+  <div class="sub">APK • ZIP مفكوك • فك AXML • تحميل مباشر بنسبة %</div>
+  <div class="topbar-actions">
+    <a href="/history" class="btn-ghost">📚 السجل</a>
+    <button id="newBtn" class="btn-ghost">🆕 تحليل جديد</button>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="card upload-card" id="uploadCard">
+    <h2>📤 رفع ملف APK أو ZIP مفكوك</h2>
+    <div class="drop" id="drop">
+      <input type="file" id="fileInput" accept=".apk,.apks,.xapk,.zip,.tgz,.tar.gz" hidden>
+      <div class="drop-icon">📦</div>
+      <div class="drop-text">اسحب APK أو ZIP هنا (يقبل مجلد APK مفكوك)</div>
+      <div class="drop-file" id="fileName"></div>
+      <div class="drop-info" id="fileInfo"></div>
+    </div>
+
+    <!-- شريط التقدم الرئيسي -->
+    <div class="progress-block" id="progressBlock">
+      <div class="progress-header">
+        <span class="progress-label" id="progressLabel">⏳ جاري...</span>
+        <span class="progress-pct" id="progressPct">0%</span>
+      </div>
+      <div class="progress">
+        <div class="bar" id="bar"></div>
+      </div>
+      <div class="progress-details">
+        <span id="progressStage">تهيئة...</span>
+        <span id="progressSpeed"></span>
+      </div>
+    </div>
+
+    <button id="analyzeBtn" class="btn-primary" disabled>🚀 بدء التحليل</button>
+    <div class="status" id="status"></div>
+  </section>
+
+  <div id="results" class="hidden">
+    <div class="result-toolbar">
+      <div class="result-meta" id="resultMeta"></div>
+      <div class="result-buttons">
+        <button class="btn-ghost" id="exportJson">⬇️ JSON</button>
+        <button class="btn-ghost" id="exportTxt">⬇️ TXT</button>
+      </div>
+    </div>
+
+    <section class="card score-card">
+      <h2>🛡️ التقييم الأمني</h2>
+      <div id="scoreBox"></div>
+    </section>
+
+    <section class="card">
+      <h2>📦 معلومات المدخل</h2>
+      <div class="grid" id="basicGrid"></div>
+    </section>
+
+    <section class="card">
+      <h2>🔍 معلومات AndroidManifest</h2>
+      <div class="grid" id="manifestGrid"></div>
+    </section>
+
+    <section class="card">
+      <h2>🏷️ أسماء التطبيق</h2>
+      <div class="list" id="appNames"></div>
+    </section>
+
+    <section class="card">
+      <h2>👤 المطور والحقوق</h2>
+      <input class="filter" data-target="developers" placeholder="🔍 فلترة...">
+      <div class="list" id="developers"></div>
+    </section>
+
+    <section class="card">
+      <h2>📧 البريد الإلكتروني</h2>
+      <input class="filter" data-target="emails" placeholder="🔍 فلترة...">
+      <div class="list" id="emails"></div>
+    </section>
+
+    <section class="card">
+      <h2>🔗 روابط التواصل</h2>
+      <div id="social" class="social-wrap"></div>
+    </section>
+
+    <section class="card">
+      <h2>🌐 المواقع الإلكترونية</h2>
+      <input class="filter" data-target="websites" placeholder="🔍 فلترة...">
+      <div class="list" id="websites"></div>
+    </section>
+
+    <section class="card">
+      <h2>🕵️ أدوات التتبع</h2>
+      <div class="list" id="trackers"></div>
+    </section>
+
+    <section class="card">
+      <h2>🔑 الأسرار والكشف</h2>
+      <input class="filter" data-target="secrets" placeholder="🔍 فلترة...">
+      <div class="list" id="secrets"></div>
+    </section>
+
+    <section class="card">
+      <h2>💰 محافظ رقمية</h2>
+      <div class="list" id="crypto"></div>
+    </section>
+
+    <section class="card">
+      <h2>🌍 عناوين IP</h2>
+      <input class="filter" data-target="ips" placeholder="🔍 فلترة...">
+      <div class="list" id="ips"></div>
+    </section>
+
+    <section class="card">
+      <h2>📚 مكتبات .so</h2>
+      <input class="filter" data-target="soLibs" placeholder="🔍 فلترة...">
+      <div class="list" id="soLibs"></div>
+    </section>
+
+    <section class="card">
+      <h2>⚙️ رموز .so</h2>
+      <input class="filter" data-target="soSymbols" placeholder="🔍 فلترة...">
+      <div class="list" id="soSymbols"></div>
+    </section>
+
+    <section class="card">
+      <h2>📝 نصوص الموارد (resources + strings.xml)</h2>
+      <input class="filter" data-target="resources" placeholder="🔍 فلترة...">
+      <div class="list" id="resources"></div>
+    </section>
+
+    <section class="card">
+      <h2>📊 إحصائيات</h2>
+      <div class="grid" id="statsGrid"></div>
+    </section>
+
+    <section class="card">
+      <h2>📂 الملفات المفحوصة</h2>
+      <input class="filter" data-target="files" placeholder="🔍 فلترة...">
+      <div class="list" id="files"></div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="footer">
+  <div>═══════════════════════════════</div>
+  <div>Developed by: ريمو براون</div>
+  <div>© 2026 All Rights Reserved</div>
+  <div>═══════════════════════════════</div>
+</footer>
+
+<script src="/static/script.js"></script>
+</body>
+</html>

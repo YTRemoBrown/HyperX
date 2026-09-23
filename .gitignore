@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.buildozer/
+hyperx_app/bin/
+hyperx_app/.buildozer/
+data/*.db
+data/*.db-journal
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.apk
+*.aab
