@@ -2,7 +2,7 @@ name: Build HyperX APK
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -21,37 +21,50 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y git zip unzip openjdk-17-jdk \
-            python3-pip python3-venv autoconf libtool pkg-config \
+            python3-pip autoconf libtool pkg-config \
             zlib1g-dev libncurses5-dev libncursesw5-dev \
             cmake libffi-dev libssl-dev build-essential ccache
           pip install --upgrade pip
           pip install buildozer cython virtualenv
 
-      - uses: actions/cache@v4
+      - name: Cache buildozer
+        uses: actions/cache@v4
         with:
           path: |
             ~/.buildozer
             hyperx_app/.buildozer
           key: bz-${{ runner.os }}-${{ hashFiles('hyperx_app/buildozer.spec') }}
 
-      - name: Prepare
+      - name: Prepare project
         run: |
           mkdir -p hyperx_app/templates hyperx_app/static hyperx_app/data
           cp -r templates/* hyperx_app/templates/ || true
           cp -r static/* hyperx_app/static/ || true
           cp hunter_core.py app.py database.py axml_decoder.py resource_guard.py requirements.txt hyperx_app/ || true
+          ls -la hyperx_app/
 
       - name: Icon
         run: |
           python3 -c "import struct,zlib;W=H=512;raw=b''.join(b'\x00'+bytes([10,14,23,255])*W for _ in range(H));c=lambda n,d:struct.pack('>I',len(d))+n+d+struct.pack('>I',zlib.crc32(n+d)&0xffffffff);png=b'\x89PNG\r\n\x1a\n'+c(b'IHDR',struct.pack('>IIBBBBB',W,H,8,6,0,0,0))+c(b'IDAT',zlib.compress(raw,9))+c(b'IEND',b'');open('hyperx_app/data/icon.png','wb').write(png);open('hyperx_app/data/presplash.png','wb').write(png)"
 
-      - name: Build
+      - name: Build APK (full log)
         working-directory: hyperx_app
         run: |
           export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-          yes | buildozer android debug 2>&1 | tail -150
+          yes | buildozer android debug
 
-      - uses: actions/upload-artifact@v4
+      - name: Show bin folder
+        if: always()
+        run: |
+          ls -la hyperx_app/bin/ || echo "NO BIN FOLDER"
+          find hyperx_app -name "*.apk" || echo "NO APK FOUND"
+
+      - name: Upload APK
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: HyperX-APK
-          path: hyperx_app/bin/*.apk
+          path: |
+            hyperx_app/bin/*.apk
+            hyperx_app/**/*.apk
+          if-no-files-found: warn
