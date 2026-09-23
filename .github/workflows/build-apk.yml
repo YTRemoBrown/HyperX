@@ -11,80 +11,47 @@ jobs:
     timeout-minutes: 350
 
     steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: 📦 Install Buildozer + deps
+      - name: Install deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            git zip unzip openjdk-17-jdk \
-            python3-pip python3-venv autoconf libtool \
-            pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev \
-            libtinfo5 cmake libffi-dev libssl-dev \
-            build-essential ccache
+          sudo apt-get install -y git zip unzip openjdk-17-jdk \
+            python3-pip python3-venv autoconf libtool pkg-config \
+            zlib1g-dev libncurses5-dev libncursesw5-dev \
+            cmake libffi-dev libssl-dev build-essential ccache
           pip install --upgrade pip
           pip install buildozer cython virtualenv
 
-      - name: 🔧 Cache Buildozer
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.buildozer
             hyperx_app/.buildozer
-          key: buildozer-${{ runner.os }}-${{ hashFiles('hyperx_app/buildozer.spec') }}
-          restore-keys: |
-            buildozer-${{ runner.os }}-
+          key: bz-${{ runner.os }}-${{ hashFiles('hyperx_app/buildozer.spec') }}
 
-      - name: 📂 Prepare project
+      - name: Prepare
         run: |
           mkdir -p hyperx_app/templates hyperx_app/static hyperx_app/data
           cp -r templates/* hyperx_app/templates/ || true
           cp -r static/* hyperx_app/static/ || true
-          cp hunter_core.py hyperx_app/ || true
-          cp app.py hyperx_app/ || true
-          cp database.py hyperx_app/ || true
-          cp axml_decoder.py hyperx_app/ || true
-          cp resource_guard.py hyperx_app/ || true
-          cp requirements.txt hyperx_app/ || true
-          ls -la hyperx_app/
+          cp hunter_core.py app.py database.py axml_decoder.py resource_guard.py requirements.txt hyperx_app/ || true
 
-      - name: 🎨 Create placeholder icon
+      - name: Icon
         run: |
-          python -c "
-import struct, zlib
-def png_chunk(name, data):
-    c = name + data
-    return struct.pack('>I', len(data)) + c + struct.pack('>I', zlib.crc32(c) & 0xffffffff)
-W = H = 512
-raw = b''
-for y in range(H):
-    raw += b'\x00'
-    for x in range(W):
-        raw += bytes([10, 14, 23, 255])
-png = b'\x89PNG\r\n\x1a\n'
-png += png_chunk(b'IHDR', struct.pack('>IIBBBBB', W, H, 8, 6, 0, 0, 0))
-png += png_chunk(b'IDAT', zlib.compress(raw, 9))
-png += png_chunk(b'IEND', b'')
-open('hyperx_app/data/icon.png','wb').write(png)
-open('hyperx_app/data/presplash.png','wb').write(png)
-print('Created')
-"
+          python3 -c "import struct,zlib;W=H=512;raw=b''.join(b'\x00'+bytes([10,14,23,255])*W for _ in range(H));c=lambda n,d:struct.pack('>I',len(d))+n+d+struct.pack('>I',zlib.crc32(n+d)&0xffffffff);png=b'\x89PNG\r\n\x1a\n'+c(b'IHDR',struct.pack('>IIBBBBB',W,H,8,6,0,0,0))+c(b'IDAT',zlib.compress(raw,9))+c(b'IEND',b'');open('hyperx_app/data/icon.png','wb').write(png);open('hyperx_app/data/presplash.png','wb').write(png)"
 
-      - name: 🔨 Build APK
+      - name: Build
         working-directory: hyperx_app
         run: |
           export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
           yes | buildozer android debug 2>&1 | tail -150
 
-      - name: 📤 Upload APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: HyperX-APK
           path: hyperx_app/bin/*.apk
-          retention-days: 30
